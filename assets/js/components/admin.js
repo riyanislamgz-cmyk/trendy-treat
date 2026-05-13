@@ -1,4 +1,5 @@
 let adminTab = 'dashboard';
+let editingProductId = null;
 function renderAdmin() {
     const stats = DB.getStats();
     const orders = DB.getOrders();
@@ -64,7 +65,7 @@ function renderAdminOrders(orders) {
                     <tr class="admin-order-row">
                         <td><strong>${o.id}</strong></td>
                         <td>${o.customer.fName} ${o.customer.lName}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.email}<br>${o.customer.phone}</span></td>
-                        <td>${o.items.map(i => `${i.name} × ${i.qty}`).join('<br>')}</td>
+                        <td>${o.items.map(i => `${i.name} x ${i.qty}`).join('<br>')}</td>
                         <td><strong>$${o.total.toFixed(2)}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.payment}</span></td>
                         <td style="font-size:.85rem">${new Date(o.date).toLocaleDateString()}</td>
                         <td>
@@ -88,31 +89,39 @@ function renderAdminOrders(orders) {
 }
 function renderAdminProducts(inv) {
     return `
-    <div class="add-product-form">
-        <h3><i class="fas fa-plus-circle"></i> Add / Edit Product</h3>
+    <div class="add-product-form" id="productForm">
+        <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Add Product</h3>
         <div class="form-row">
-            <div class="form-group"><label>Product Name</label><input type="text" id="apName" placeholder="Product name"></div>
+            <div class="form-group"><label>Product Name *</label><input type="text" id="apName" placeholder="Premium Chocolate Box"></div>
             <div class="form-group"><label>Category</label><select id="apCat">${DB.categories.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label>Price ($)</label><input type="number" id="apPrice" step="0.01" placeholder="29.99"></div>
+            <div class="form-group"><label>Price ($) *</label><input type="number" id="apPrice" step="0.01" placeholder="29.99"></div>
             <div class="form-group"><label>Old Price ($)</label><input type="number" id="apOldPrice" step="0.01" placeholder="39.99"></div>
         </div>
-        <div class="form-group"><label>Description</label><textarea id="apDesc" placeholder="Product description"></textarea></div>
+        <div class="form-group"><label>Description</label><textarea id="apDesc" placeholder="Product description..."></textarea></div>
         <div class="form-row">
-            <div class="form-group"><label>Emoji Icon</label><input type="text" id="apImage" placeholder="🍫" maxlength="2" style="font-size:1.5rem"></div>
+            <div class="form-group"><label>Image URL</label><input type="url" id="apImage" placeholder="https://example.com/image.jpg">
+                <span style="font-size:.75rem;color:var(--text-light)">Or use emoji: 🍫 🎂 🍪 🎁 💐</span>
+            </div>
             <div class="form-group"><label>Badge</label><select id="apBadge"><option value="">None</option><option value="new">New</option><option value="sale">Sale</option><option value="popular">Popular</option></select></div>
         </div>
-        <button class="btn btn-primary" onclick="addAdminProduct()"><i class="fas fa-save"></i> Add Product</button>
+        <div id="imagePreview" style="margin-bottom:12px;display:none"><img id="previewImg" src="" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:2px solid var(--border)"></div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> <span id="saveBtnText">Add Product</span></button>
+            <button class="btn btn-outline" onclick="cancelEdit()" id="cancelBtn" style="display:none"><i class="fas fa-times"></i> Cancel</button>
+        </div>
     </div>
     <div class="admin-table-wrap">
         <table class="admin-table">
             <thead><tr><th>ID</th><th>Product</th><th>Category</th><th>Price</th><th>Sold</th><th>Stock</th><th>Actions</th></tr></thead>
             <tbody>
-                ${DB.products.map(p => `
+                ${DB.products.map(p => {
+                    const isUrl = p.image && (p.image.startsWith('http') || p.image.startsWith('data:'));
+                    return `
                     <tr>
                         <td>#${p.id}</td>
-                        <td>${p.image} ${p.name}</td>
+                        <td>${isUrl ? `<img src="${p.image}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:6px">` : p.image} ${p.name}</td>
                         <td>${DB.categories.find(c => c.id === p.category)?.name || p.category}</td>
                         <td>$${p.price.toFixed(2)}</td>
                         <td>${20 - (inv[p.id] || 20)}</td>
@@ -121,8 +130,8 @@ function renderAdminProducts(inv) {
                             <button onclick="editProduct(${p.id})" title="Edit"><i class="fas fa-edit"></i></button>
                             <button class="del-btn" onclick="deleteProduct(${p.id})" title="Delete"><i class="fas fa-trash"></i></button>
                         </td>
-                    </tr>
-                `).join('')}
+                    </tr>`;
+                }).join('')}
             </tbody>
         </table>
     </div>`;
@@ -152,34 +161,45 @@ function updateOrderStatus(id, status) {
 function showOrderDetails(id) {
     const o = DB.getOrders().find(o => o.id === id);
     if (!o) return;
-    const msg = `Order: ${o.id}\nCustomer: ${o.customer.fName} ${o.customer.lName}\nEmail: ${o.customer.email}\nPhone: ${o.customer.phone}\nAddress: ${o.customer.address}\nPayment: ${o.customer.payment}\nItems: ${o.items.map(i => `${i.name} × ${i.qty} = $${(i.qty * i.price).toFixed(2)}`).join('\n')}\nTotal: $${o.total.toFixed(2)}\nStatus: ${o.status}\nDate: ${new Date(o.date).toLocaleString()}`;
+    const msg = 'Order: ' + o.id + '\nCustomer: ' + o.customer.fName + ' ' + o.customer.lName + '\nEmail: ' + o.customer.email + '\nPhone: ' + o.customer.phone + '\nAddress: ' + o.customer.address + '\nPayment: ' + o.customer.payment + '\nItems: ' + o.items.map(i => i.name + ' x ' + i.qty + ' = $' + (i.qty * i.price).toFixed(2)).join('\n') + '\nTotal: $' + o.total.toFixed(2) + '\nStatus: ' + o.status + '\nDate: ' + new Date(o.date).toLocaleString();
     alert(msg);
 }
 function deleteOrder(id) {
     if (confirm('Delete order ' + id + '?')) {
-        const orders = DB.getOrders().filter(o => o.id !== id);
-        DB.saveOrders(orders);
+        DB.saveOrders(DB.getOrders().filter(o => o.id !== id));
         Toast.show('Order deleted');
         render();
     }
 }
-function addAdminProduct() {
+function saveProduct() {
     const name = document.getElementById('apName').value.trim();
     const cat = document.getElementById('apCat').value;
     const price = parseFloat(document.getElementById('apPrice').value);
     const oldPrice = parseFloat(document.getElementById('apOldPrice').value) || null;
     const desc = document.getElementById('apDesc').value.trim();
-    const image = document.getElementById('apImage').value || '🎁';
+    const image = document.getElementById('apImage').value.trim() || '🎁';
     const badge = document.getElementById('apBadge').value || null;
-    if (!name || !price) { Toast.show('Name and price are required', 'error'); return; }
-    const maxId = Math.max(...DB.products.map(p => p.id), 0);
-    DB.products.push({ id: maxId + 1, name, category: cat, price, oldPrice, rating: 0, reviews: 0, image, badge, desc });
-    Toast.show('Product added!');
+    if (!name || !price || isNaN(price)) { Toast.show('Name and valid price are required', 'error'); return; }
+    if (price <= 0) { Toast.show('Price must be greater than 0', 'error'); return; }
+    if (editingProductId) {
+        const p = DB.getProduct(editingProductId);
+        if (p) { Object.assign(p, { name, category: cat, price, oldPrice, desc, image, badge }); }
+        editingProductId = null;
+        Toast.show('Product updated!');
+    } else {
+        const maxId = Math.max(...DB.products.map(p => p.id), 0);
+        DB.products.push({ id: maxId + 1, name, category: cat, price, oldPrice, rating: 0, reviews: 0, image, badge, desc });
+        Toast.show('Product added!');
+    }
+    cancelEdit();
     render();
 }
 function editProduct(id) {
     const p = DB.getProduct(id);
     if (!p) return;
+    editingProductId = id;
+    document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Product #' + id;
+    document.getElementById('saveBtnText').textContent = 'Update Product';
     document.getElementById('apName').value = p.name;
     document.getElementById('apCat').value = p.category;
     document.getElementById('apPrice').value = p.price;
@@ -187,8 +207,29 @@ function editProduct(id) {
     document.getElementById('apDesc').value = p.desc;
     document.getElementById('apImage').value = p.image;
     document.getElementById('apBadge').value = p.badge || '';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    Toast.show('Edit the product and click Add Product to save changes (will create duplicate)');
+    document.getElementById('cancelBtn').style.display = '';
+    showImagePreview(p.image);
+    document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+}
+function cancelEdit() {
+    editingProductId = null;
+    document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Add Product';
+    document.getElementById('saveBtnText').textContent = 'Add Product';
+    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('apName').value = '';
+    document.getElementById('apPrice').value = '';
+    document.getElementById('apOldPrice').value = '';
+    document.getElementById('apDesc').value = '';
+    document.getElementById('apImage').value = '';
+    document.getElementById('apBadge').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+}
+function showImagePreview(url) {
+    const preview = document.getElementById('imagePreview');
+    const img = document.getElementById('previewImg');
+    if (url && (url.startsWith('http') || url.startsWith('data:'))) {
+        img.src = url; preview.style.display = '';
+    } else { preview.style.display = 'none'; }
 }
 function deleteProduct(id) {
     if (confirm('Delete product #' + id + '?')) {

@@ -21,7 +21,7 @@ function renderCart() {
                     const p = DB.getProduct(i.id);
                     return `
                     <div class="cart-item">
-                        <div class="cart-item-img">${i.image || '🎁'}</div>
+                        <div class="cart-item-img">${i.image && (i.image.startsWith('http') || i.image.startsWith('data:')) ? `<img src="${i.image}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : (i.image || '🎁')}</div>
                         <div class="cart-item-info">
                             <h4>${i.name}</h4>
                             <p>$${i.price.toFixed(2)} each</p>

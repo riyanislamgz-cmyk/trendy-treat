@@ -31,10 +31,12 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
             </div>
         </div>
         <div class="prod-grid">
-            ${prods.length ? prods.map(p => `
+            ${prods.length ? prods.map(p => {
+                const isUrl = p.image && (p.image.startsWith('http') || p.image.startsWith('data:'));
+                return `
                 <div class="prod-card">
                     ${p.badge ? `<span class="badge badge-${p.badge}">${p.badge === 'sale' ? 'Sale' : p.badge === 'new' ? 'New' : 'Popular'}</span>` : ''}
-                    <div class="prod-img">${p.image}</div>
+                    <div class="prod-img">${isUrl ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : p.image}</div>
                     <div class="prod-info">
                         <div class="prod-category">${DB.categories.find(c => c.id === p.category)?.name || p.category}</div>
                         <div class="prod-name">${p.name}</div>
@@ -44,8 +46,8 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
                             <button class="add-cart-btn" onclick="event.stopPropagation(); addToCart(${p.id})" title="Add to cart"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
-                </div>
-            `).join('') : `<div style="grid-column:1/-1;text-align:center;padding:60px 24px"><i class="fas fa-search" style="font-size:3rem;color:var(--border);margin-bottom:16px;display:block"></i><h3>No products found</h3><p style="color:var(--text-light);margin-top:8px">Try a different search or category</p></div>`}
+                </div>`;
+            }).join('') : `<div style="grid-column:1/-1;text-align:center;padding:60px 24px"><i class="fas fa-search" style="font-size:3rem;color:var(--border);margin-bottom:16px;display:block"></i><h3>No products found</h3><p style="color:var(--text-light);margin-top:8px">Try a different search or category</p></div>`}
         </div>
     </section>`;
 }
