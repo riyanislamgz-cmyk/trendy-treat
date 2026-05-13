@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trendy Treat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="#/" class="nav-brand">
+                    <span class="brand-text">Trendy</span>
+                    <span class="brand-leaf"><i class="fas fa-leaf"></i></span>
+                    <span class="brand-text">Treat</span>
+                </a>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#/" class="nav-link active">Home</a></li>
+                    <li><a href="#/products" class="nav-link">Shop</a></li>
+                    <li><a href="#/orders" class="nav-link">Orders</a></li>
+                    <li><a href="#/admin" class="nav-link">Admin</a></li>
+                </ul>
+                <div class="nav-right">
+                    <a href="#/cart" class="cart-btn" id="cartBtn">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                    <button class="hamburger" id="hamburger" aria-label="Menu">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main id="mainContent">
+            <div class="loader" id="pageLoader">
+                <div class="spinner"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-container">
+                <div class="footer-brand">
+                    <h3><span class="brand-text">Trendy</span> <i class="fas fa-leaf"></i> <span class="brand-text">Treat</span></h3>
+                    <p>Your premium destination for trendy treats & gifts.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <a href="#/">Home</a>
+                    <a href="#/products">Shop</a>
+                    <a href="#/cart">Cart</a>
+                    <a href="#/orders">Orders</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact</h4>
+                    <p><i class="fas fa-envelope"></i> support@trendytreat.com</p>
+                    <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Trendy Treat. All rights reserved. Made with <i class="fas fa-heart" style="color:#e74c3c;"></i></p>
+            </div>
+        </footer>
+
+        <button class="chat-toggle" id="chatToggle" title="AI Assistant">
+            <i class="fas fa-robot"></i>
+        </button>
+
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <i class="fas fa-robot"></i>
+                    <span>Trendy AI Assistant</span>
+                </div>
+                <button id="chatClose" class="chat-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-msg bot">
+                    <div class="msg-content">Hi! I'm Trendy AI. I can help you with orders, product recommendations, and more. How can I help? 🌿</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="chatInput" placeholder="Type a message..." rows="1"></textarea>
+                <button id="chatSend" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="assets/js/utils/storage.js"></script>
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/gemini.js"></script>
+    <script src="assets/js/components/header.js"></script>
+    <script src="assets/js/components/products.js"></script>
+    <script src="assets/js/components/cart.js"></script>
+    <script src="assets/js/components/checkout.js"></script>
+    <script src="assets/js/components/orders.js"></script>
+    <script src="assets/js/components/admin.js"></script>
+    <script src="assets/js/components/chat.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
