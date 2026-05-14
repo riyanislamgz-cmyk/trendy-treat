@@ -43,14 +43,93 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
                         <div class="prod-rating">${'★'.repeat(Math.floor(p.rating))}${p.rating % 1 >= 0.5 ? '½' : ''} <span>(${p.reviews})</span></div>
                         <div class="prod-price-row">
                             <div class="prod-price">$${p.price.toFixed(2)}${p.oldPrice ? `<span class="old-price">$${p.oldPrice.toFixed(2)}</span>` : ''}</div>
-                            <button class="add-cart-btn" onclick="event.stopPropagation(); addToCart(${p.id})" title="Add to cart"><i class="fas fa-plus"></i></button>
+                            <div style="display:flex;gap:6px">
+                                <button class="add-cart-btn" onclick="event.stopPropagation(); quickBuy(${p.id})" title="Buy Now"><i class="fas fa-bolt"></i></button>
+                                <button class="add-cart-btn" style="background:var(--accent)" onclick="event.stopPropagation(); addToCart(${p.id})" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>`;
             }).join('') : `<div style="grid-column:1/-1;text-align:center;padding:60px 24px"><i class="fas fa-search" style="font-size:3rem;color:var(--border);margin-bottom:16px;display:block"></i><h3>No products found</h3><p style="color:var(--text-light);margin-top:8px">Try a different search or category</p></div>`}
         </div>
-    </section>`;
+    </section>
+    <!-- Quick Buy Checkout Modal -->
+    <div class="modal-overlay" id="quickBuyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bolt"></i> Quick Order</h3>
+                <button class="modal-close" onclick="closeQuickBuy()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="qbProductId">
+                <div id="quickBuyPreview" style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px;text-align:center"></div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+                    <h4 style="margin-bottom:12px;color:var(--primary-dark)"><i class="fas fa-user"></i> Your Details</h4>
+                    <div class="form-group"><label>Full Name *</label><input type="text" id="qbName" placeholder="Your full name" required style="width:100%"></div>
+                    <div class="form-group"><label>Phone Number *</label><input type="tel" id="qbPhone" placeholder="+880 1XXXXXXXXXX" required style="width:100%"></div>
+                    <div class="form-group"><label>Delivery Address *</label><textarea id="qbAddress" rows="3" placeholder="House, Road, Area, City, ZIP" required style="width:100%"></textarea></div>
+                    <div class="form-group"><label>Payment Method</label>
+                        <div class="payment-methods">
+                            <div class="payment-method active" onclick="selectQuickPayment(this)"><i class="fas fa-mobile-alt"></i><span>bKash/Nagad</span></div>
+                            <div class="payment-method" onclick="selectQuickPayment(this)"><i class="fas fa-credit-card"></i><span>Card</span></div>
+                            <div class="payment-method" onclick="selectQuickPayment(this)"><i class="fas fa-money-bill-wave"></i><span>Cash</span></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="submitQuickOrder()" style="padding:16px;font-size:1.1rem"><i class="fas fa-check-circle"></i> Confirm Order</button>
+                <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeQuickBuy()">Cancel</button>
+            </div>
+        </div>
+    </div>`;
 }
+
+let quickBuyPayment = 'bKash/Nagad';
+
+function selectQuickPayment(el) {
+    el.parentElement.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+    el.classList.add('active');
+    quickBuyPayment = el.querySelector('span').textContent;
+}
+
+function quickBuy(id) {
+    const p = DB.getProduct(id);
+    if (!p) return;
+    document.getElementById('qbProductId').value = id;
+    document.getElementById('quickBuyPreview').innerHTML = `
+        <div style="font-size:3rem;margin-bottom:8px">${p.image}</div>
+        <h4 style="margin-bottom:4px">${p.name}</h4>
+        <p style="color:var(--text-light);font-size:.9rem">$${p.price.toFixed(2)}</p>
+    `;
+    document.getElementById('qbName').value = '';
+    document.getElementById('qbPhone').value = '';
+    document.getElementById('qbAddress').value = '';
+    document.getElementById('quickBuyModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('qbName').focus();
+}
+
+function closeQuickBuy() {
+    document.getElementById('quickBuyModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function submitQuickOrder() {
+    const id = parseInt(document.getElementById('qbProductId').value);
+    const name = document.getElementById('qbName').value.trim();
+    const phone = document.getElementById('qbPhone').value.trim();
+    const address = document.getElementById('qbAddress').value.trim();
+    if (!name || !phone || !address) { Toast.show('Please fill in all required fields', 'error'); return; }
+    if (phone.replace(/[\+\-\s]/g, '').length < 10) { Toast.show('Please enter a valid phone number', 'error'); return; }
+    const p = DB.getProduct(id);
+    DB.addToCart(id);
+    const customer = { name, email: '', phone, address, payment: quickBuyPayment };
+    const order = DB.createOrder(customer);
+    closeQuickBuy();
+    updateCartCount();
+    Toast.show('🎉 Order placed! ID: ' + order.id);
+    navigate('/orders');
+}
+
 function handleSearch(val) {
     clearTimeout(window._searchTimer);
     window._searchTimer = setTimeout(() => {
