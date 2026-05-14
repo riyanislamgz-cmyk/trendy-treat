@@ -132,6 +132,10 @@ function openProductDetail(id) {
                     <button class="btn btn-primary btn-block detail-order-btn" onclick="closeDetail(); quickBuy(${p.id})">
                         <i class="fas fa-bolt"></i> Order Now — ${DB.formatPrice(p.price)}
                     </button>
+                    <div style="display:flex;gap:8px;margin-top:12px;justify-content:center">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href.split('#')[0] + '#/products?cat=' + p.category)}&quote=${encodeURIComponent('Check out ' + p.name + ' at Trendy Treat!')}" target="_blank" class="btn btn-sm btn-outline" style="font-size:.85rem"><i class="fab fa-facebook"></i> Share</a>
+                        <a href="https://wa.me/?text=${encodeURIComponent(p.name + ' - ' + DB.formatPrice(p.price) + ' ' + window.location.href.split('#')[0])}" target="_blank" class="btn btn-sm btn-outline" style="font-size:.85rem"><i class="fab fa-whatsapp"></i> Share</a>
+                    </div>
                 </div>
                 <div class="detail-safe">
                     <i class="fas fa-shield-alt"></i> Safe & secure checkout. Your information is protected.
