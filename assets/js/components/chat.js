@@ -64,7 +64,7 @@ function handleLocalChat(msg) {
     if (q.includes('hello') || q.includes('hi') || q.includes('hey')) return 'Hello! Welcome to Trendy Treat 🌿 How can I help you today?';
     if (q.includes('product') || q.includes('shop') || q.includes('buy') || q.includes('gift')) {
         const prods = DB.products.slice(0, 3);
-        return `Here are some of our popular items:\n${prods.map(p => `• ${p.image} **${p.name}** - $${p.price.toFixed(2)}`).join('\n')}\n\nBrowse all products in the Shop section! 🎁`;
+        return `Here are some of our popular items:\n${prods.map(p => `• ${p.image} **${p.name}** - ${DB.formatPrice(p.price)}`).join('\n')}\n\nBrowse all products in the Shop section! 🎁`;
     }
     if (q.includes('order') || q.includes('delivery') || q.includes('ship')) {
         return 'You can view all your orders in the Orders section. If you need help with a specific order, please provide the order ID! 📦';
@@ -74,7 +74,7 @@ function handleLocalChat(msg) {
     }
     if (q.includes('price') || q.includes('cost') || q.includes('cheap')) {
         const cheapest = [...DB.products].sort((a, b) => a.price - b.price)[0];
-        return `Our prices start at $${cheapest.price.toFixed(2)} for ${cheapest.name}. We have options for every budget! 🎯`;
+        return `Our prices start at ${DB.formatPrice(cheapest.price)} for ${cheapest.name}. We have options for every budget! 🎯`;
     }
     return `Hi! I'm Trendy AI 🌿 I can help you with:\n• Product recommendations 🎁\n• Order status 📦\n• Store information ℹ️\n• Gift ideas 💝\n\nWhat would you like to know?`;
 }

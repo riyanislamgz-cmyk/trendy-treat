@@ -32,7 +32,13 @@ DB.getOrders = () => Store.get('orders', []);
 DB.saveOrders = (o) => Store.set('orders', o);
 DB.getInventory = () => Store.get('inventory', {});
 DB.saveInventory = (i) => Store.set('inventory', i);
-DB.getSettings = () => Store.get('settings', { geminiKey: 'AIzaSyBLWPd5Sx6ID4KtO1UKLtXlAhD-8awo-QU', storeName: 'Trendy Treat', currency: 'USD' });
+DB.getSettings = () => Store.get('settings', { geminiKey: 'AIzaSyBLWPd5Sx6ID4KtO1UKLtXlAhD-8awo-QU', storeName: 'Trendy Treat', currency: 'BDT' });
+DB.currencySymbol = () => { const s = DB.getSettings(); return s.currency === 'BDT' ? '৳' : '$'; };
+DB.formatPrice = (amount) => { const s = DB.getSettings(); return s.currency === 'BDT' ? '৳' + (amount * 120).toFixed(0) : '$' + amount.toFixed(2); };
+DB.parsePrice = (amount) => { const s = DB.getSettings(); return s.currency === 'BDT' ? Math.round(amount / 120) : amount; };
+DB.shipping = () => DB.getSettings().currency === 'BDT' ? 99 : 5.99;
+DB.freeThreshold = () => DB.getSettings().currency === 'BDT' ? 2000 : 50;
+DB.freeThresholdFormatted = () => DB.formatPrice(DB.freeThreshold());
 DB.saveSettings = (s) => Store.set('settings', s);
 DB.cartCount = () => DB.getCart().reduce((sum, i) => sum + i.qty, 0);
 DB.cartTotal = () => DB.getCart().reduce((sum, i) => sum + i.qty * i.price, 0);
@@ -54,8 +60,8 @@ DB.createOrder = (data) => {
         id: 'TT' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
         items: DB.getCart(),
         subtotal: DB.cartTotal(),
-        shipping: 5.99,
-        total: DB.cartTotal() + 5.99,
+        shipping: DB.shipping(),
+        total: DB.cartTotal() + DB.shipping(),
         customer: data,
         status: 'pending',
         date: new Date().toISOString(),
@@ -70,12 +76,12 @@ DB.createOrder = (data) => {
 DB.createQuickOrder = (product, customer) => {
     const o = DB.getOrders();
     const items = [{ id: product.id, name: product.name, price: product.price, image: product.image, qty: 1 }];
-    const total = product.price + 5.99;
+    const total = product.price + DB.shipping();
     const order = {
         id: 'TT' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
         items: items,
         subtotal: product.price,
-        shipping: 5.99,
+        shipping: DB.shipping(),
         total: total,
         customer: customer,
         status: 'pending',

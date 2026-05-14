@@ -21,7 +21,7 @@ const Gemini = {
             const systemPrompt = `You are Trendy AI, the helpful assistant for Trendy Treat - an e-commerce store. 
 
 Current store data:
-- Products: ${JSON.stringify(DB.products.map(p => ({ id: p.id, name: p.name, price: '$' + p.price.toFixed(2), category: p.category })))}
+- Products: ${JSON.stringify(DB.products.map(p => ({ id: p.id, name: p.name, price: DB.formatPrice(p.price), category: p.category })))}
 - Total products: ${DB.products.length}
 - Categories: ${DB.categories.map(c => c.name).join(', ')}
 
@@ -83,7 +83,7 @@ Keep responses friendly, concise, and helpful. Use emojis occasionally. If asked
     },
     async handleOrder(userMessage, orders) {
         if (!this.key) return null;
-        const context = orders.map(o => `Order ${o.id}: ${o.status}, items: ${o.items.length}, total: $${o.total.toFixed(2)}, date: ${new Date(o.date).toLocaleDateString()}`).join('\n');
+        const context = orders.map(o => `Order ${o.id}: ${o.status}, items: ${o.items.length}, total: ${DB.formatPrice(o.total)}, date: ${new Date(o.date).toLocaleDateString()}`).join('\n');
         try {
             const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + this.model + ':generateContent?key=' + this.key, {
                 method: 'POST',

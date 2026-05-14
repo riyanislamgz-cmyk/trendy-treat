@@ -27,7 +27,7 @@ function renderAdminDashboard(stats) {
     return `
     <div class="admin-stats">
         <div class="stat-card"><div class="stat-icon"><i class="fas fa-shopping-bag"></i></div><div class="stat-num">${stats.totalOrders}</div><div class="stat-label">Total Orders</div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="fas fa-dollar-sign"></i></div><div class="stat-num">$${stats.revenue.toFixed(2)}</div><div class="stat-label">Total Revenue</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div><div class="stat-num">${DB.formatPrice(stats.revenue)}</div><div class="stat-label">Total Revenue</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-num">${stats.pending}</div><div class="stat-label">Pending Orders</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-num">${stats.completed}</div><div class="stat-label">Completed</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="fas fa-box"></i></div><div class="stat-num">${stats.products}</div><div class="stat-label">Products</div></div>
@@ -42,7 +42,7 @@ function renderAdminDashboard(stats) {
                         <td><strong>${o.id}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${new Date(o.date).toLocaleDateString()}</span></td>
                         <td>${o.customer.name}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.phone}</span></td>
                         <td>${o.items.reduce((s, i) => s + i.qty, 0)} items</td>
-                        <td>$${o.total.toFixed(2)}</td>
+                        <td>$${DB.formatPrice(o.total)}</td>
                         <td><span class="order-status status-${o.status}">${o.status}</span></td>
                         <td><button class="btn btn-sm btn-outline" onclick="adminTab='orders';render()">View</button></td>
                     </tr>
@@ -66,7 +66,7 @@ function renderAdminOrders(orders) {
                         <td><strong>${o.id}</strong></td>
                         <td>${o.customer.name}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.phone}</span></td>
                         <td>${o.items.map(i => `${i.name} x ${i.qty}`).join('<br>')}</td>
-                        <td><strong>$${o.total.toFixed(2)}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.payment}</span></td>
+                        <td><strong>$${DB.formatPrice(o.total)}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.payment}</span></td>
                         <td style="font-size:.85rem">${new Date(o.date).toLocaleDateString()}</td>
                         <td>
                             <select onchange="updateOrderStatus('${o.id}', this.value)" class="order-status-select" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem">
@@ -123,7 +123,7 @@ function renderAdminProducts(inv) {
                         <td>#${p.id}</td>
                         <td>${isUrl ? `<img src="${p.image}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:6px">` : p.image} ${p.name}</td>
                         <td>${DB.categories.find(c => c.id === p.category)?.name || p.category}</td>
-                        <td>$${p.price.toFixed(2)}</td>
+                        <td>$${DB.formatPrice(p.price)}</td>
                         <td>${20 - (inv[p.id] || 20)}</td>
                         <td>${inv[p.id] ?? 20}</td>
                         <td class="actions">

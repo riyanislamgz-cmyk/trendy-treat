@@ -24,7 +24,7 @@ function renderCart() {
                         <div class="cart-item-img">${i.image && (i.image.startsWith('http') || i.image.startsWith('data:')) ? `<img src="${i.image}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : (i.image || '🎁')}</div>
                         <div class="cart-item-info">
                             <h4>${i.name}</h4>
-                            <p>$${i.price.toFixed(2)} each</p>
+                            <p>$${DB.formatPrice(i.price)} each</p>
                             <div class="cart-item-qty">
                                 <button class="qty-btn" onclick="updateQty(${i.id}, ${i.qty - 1})" ${i.qty <= 1 ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
                                 <span>${i.qty}</span>
@@ -32,7 +32,7 @@ function renderCart() {
                             </div>
                         </div>
                         <div class="cart-item-total">
-                            <div class="price">$${(i.qty * i.price).toFixed(2)}</div>
+                            <div class="price">$${DB.formatPrice(i.qty * i.price)}</div>
                             <button class="remove-item" onclick="removeItem(${i.id})"><i class="fas fa-trash-alt"></i> Remove</button>
                         </div>
                     </div>`;
@@ -40,10 +40,10 @@ function renderCart() {
             </div>
             <div class="cart-summary">
                 <h3>Order Summary</h3>
-                <div class="summary-row"><span>Subtotal</span><span>$${DB.cartTotal().toFixed(2)}</span></div>
-                <div class="summary-row"><span>Shipping</span><span>${DB.cartTotal() >= 50 ? '<span style="color:#2ecc71">FREE</span>' : '$5.99'}</span></div>
-                <div class="summary-row total"><span>Total</span><span>$${(DB.cartTotal() + (DB.cartTotal() >= 50 ? 0 : 5.99)).toFixed(2)}</span></div>
-                <p style="font-size:.8rem;color:var(--text-light);margin:8px 0 16px">Free shipping on orders over $50</p>
+                <div class="summary-row"><span>Subtotal</span><span>$${DB.formatPrice(DB.cartTotal())}</span></div>
+                <div class="summary-row"><span>Shipping</span><span>${DB.cartTotal() >= DB.freeThreshold() ? '<span style="color:#2ecc71">FREE</span>' : DB.formatPrice(DB.shipping())}</span></div>
+                <div class="summary-row total"><span>Total</span><span>$${DB.formatPrice(DB.cartTotal() + (DB.cartTotal() >= DB.freeThreshold() ? 0 : DB.shipping()))}</span></div>
+                <p style="font-size:.8rem;color:var(--text-light);margin:8px 0 16px">Free shipping on orders over ${DB.freeThresholdFormatted()}</p>
                 <button class="btn btn-primary btn-block" onclick="openCheckout()"><i class="fas fa-check-circle"></i> Order Now</button>
                 <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="clearCart()"><i class="fas fa-trash"></i> Clear Cart</button>
             </div>
@@ -59,12 +59,12 @@ function renderCart() {
             <div class="modal-body" style="max-height:70vh;overflow-y:auto;padding:20px">
                 <div class="order-details-preview" style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px">
                     <h4 style="margin-bottom:8px;font-size:.95rem">📦 Items (${items.length})</h4>
-                    ${items.map(i => `<div style="display:flex;justify-content:space-between;font-size:.85rem;padding:3px 0"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">$${(i.qty * i.price).toFixed(2)}</span></div>`).join('')}
+                    ${items.map(i => `<div style="display:flex;justify-content:space-between;font-size:.85rem;padding:3px 0"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">$${DB.formatPrice(i.qty * i.price)}</span></div>`).join('')}
                     <div style="display:flex;justify-content:space-between;font-size:.9rem;padding:6px 0;border-top:1px solid var(--border);margin-top:8px">
-                        <span>Shipping</span><span>${DB.cartTotal() >= 50 ? '<span style="color:#2ecc71">FREE</span>' : '$5.99'}</span>
+                        <span>Shipping</span><span>${DB.cartTotal() >= DB.freeThreshold() ? '<span style="color:#2ecc71">FREE</span>' : DB.formatPrice(DB.shipping())}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;color:var(--primary);padding-top:8px;border-top:2px solid var(--primary)">
-                        <span>Total</span><span>$${(DB.cartTotal() + (DB.cartTotal() >= 50 ? 0 : 5.99)).toFixed(2)}</span>
+                        <span>Total</span><span>$${DB.formatPrice(DB.cartTotal() + (DB.cartTotal() >= DB.freeThreshold() ? 0 : DB.shipping()))}</span>
                     </div>
                 </div>
                 <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">

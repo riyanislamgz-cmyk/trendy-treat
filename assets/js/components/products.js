@@ -42,7 +42,7 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
                         <div class="prod-name">${p.name}</div>
                         <div class="prod-rating">${'★'.repeat(Math.floor(p.rating))}${p.rating % 1 >= 0.5 ? '½' : ''} <span>(${p.reviews})</span></div>
                         <div class="prod-price-row">
-                            <div class="prod-price">$${p.price.toFixed(2)}${p.oldPrice ? `<span class="old-price">$${p.oldPrice.toFixed(2)}</span>` : ''}</div>
+                            <div class="prod-price">${DB.formatPrice(p.price)}${p.oldPrice ? `<span class="old-price">${DB.formatPrice(p.oldPrice)}</span>` : ''}</div>
                             <button class="add-cart-btn" onclick="event.stopPropagation(); quickBuy(${p.id})" title="Order Now"><i class="fas fa-bolt"></i></button>
                         </div>
                     </div>
@@ -110,7 +110,7 @@ function openProductDetail(id) {
         <div class="detail-layout">
             <div class="detail-image-section">
                 <div class="detail-image">${isUrl ? `<img src="${p.image}" alt="${p.name}">` : `<span style="font-size:6rem">${p.image}</span>`}</div>
-                ${p.oldPrice ? `<div class="detail-save-badge">Save $${(p.oldPrice - p.price).toFixed(2)}</div>` : ''}
+                ${p.oldPrice ? `<div class="detail-save-badge">Save ${DB.formatPrice(p.oldPrice - p.price)}</div>` : ''}
             </div>
             <div class="detail-info-section">
                 <div class="detail-category">${cat ? cat.name : p.category}</div>
@@ -120,8 +120,8 @@ function openProductDetail(id) {
                     <span class="reviews">${p.reviews} reviews</span>
                 </div>
                 <div class="detail-price-box">
-                    <div class="detail-current-price">$${p.price.toFixed(2)}</div>
-                    ${p.oldPrice ? `<div class="detail-old-price">$${p.oldPrice.toFixed(2)}</div>` : ''}
+                    <div class="detail-current-price">${DB.formatPrice(p.price)}</div>
+                    ${p.oldPrice ? `<div class="detail-old-price">${DB.formatPrice(p.oldPrice)}</div>` : ''}
                     ${p.oldPrice ? `<div class="detail-discount">${Math.round((1 - p.price/p.oldPrice) * 100)}% OFF</div>` : ''}
                 </div>
                 <div class="detail-divider"></div>
@@ -130,7 +130,7 @@ function openProductDetail(id) {
                 <div class="detail-divider"></div>
                 <div class="detail-actions">
                     <button class="btn btn-primary btn-block detail-order-btn" onclick="closeDetail(); quickBuy(${p.id})">
-                        <i class="fas fa-bolt"></i> Order Now — $${p.price.toFixed(2)}
+                        <i class="fas fa-bolt"></i> Order Now — ${DB.formatPrice(p.price)}
                     </button>
                 </div>
                 <div class="detail-safe">
@@ -158,7 +158,7 @@ function quickBuy(id) {
             ${isUrl ? `<img src="${p.image}" style="width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0">` : `<span style="font-size:3rem">${p.image}</span>`}
             <div>
                 <div style="font-weight:600;font-size:1rem;color:var(--text)">${p.name}</div>
-                <div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-top:4px">$${p.price.toFixed(2)}</div>
+                <div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-top:4px">${DB.formatPrice(p.price)}</div>
                 <div style="font-size:.85rem;color:var(--text-light)">Qty: 1</div>
             </div>
         </div>

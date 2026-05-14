@@ -29,15 +29,15 @@ function renderOrders() {
                         ${o.items.map(i => `
                             <div class="order-item">
                                 <span>${i.name} × ${i.qty}</span>
-                                <span>$${(i.qty * i.price).toFixed(2)}</span>
+                                <span>$${DB.formatPrice(i.qty * i.price)}</span>
                             </div>
                         `).join('')}
                     </div>
                     <div style="display:flex;justify-content:space-between;font-size:.9rem;color:var(--text-light);margin-top:8px">
-                        <span>Shipping: $${o.shipping.toFixed(2)}</span>
+                        <span>Shipping: $${DB.formatPrice(o.shipping)}</span>
                         <span>${o.customer.payment}</span>
                     </div>
-                    <div class="order-total">Total: $${o.total.toFixed(2)}</div>
+                    <div class="order-total">Total: $${DB.formatPrice(o.total)}</div>
                     ${o.notes ? `<div style="font-size:.85rem;color:var(--text-light);margin-top:8px;padding:8px;background:#f8faf8;border-radius:8px"><strong>Notes:</strong> ${o.notes}</div>` : ''}
                     <div style="margin-top:12px;font-size:.85rem;color:var(--text-light)">
                         <i class="fas fa-user"></i> ${o.customer.name} &nbsp;|&nbsp; <i class="fas fa-phone"></i> ${o.customer.phone}
