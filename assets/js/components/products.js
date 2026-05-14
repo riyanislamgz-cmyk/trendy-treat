@@ -34,22 +34,34 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
             ${prods.length ? prods.map(p => {
                 const isUrl = p.image && (p.image.startsWith('http') || p.image.startsWith('data:'));
                 return `
-                <div class="prod-card">
+                <div class="prod-card" onclick="openProductDetail(${p.id})" style="cursor:pointer">
                     ${p.badge ? `<span class="badge badge-${p.badge}">${p.badge === 'sale' ? 'Sale' : p.badge === 'new' ? 'New' : 'Popular'}</span>` : ''}
-                    <div class="prod-img">${isUrl ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover">` : p.image}</div>
+                    <div class="prod-img">${isUrl ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover">` : p.image}</div>
                     <div class="prod-info">
                         <div class="prod-category">${DB.categories.find(c => c.id === p.category)?.name || p.category}</div>
                         <div class="prod-name">${p.name}</div>
                         <div class="prod-rating">${'★'.repeat(Math.floor(p.rating))}${p.rating % 1 >= 0.5 ? '½' : ''} <span>(${p.reviews})</span></div>
                         <div class="prod-price-row">
                             <div class="prod-price">$${p.price.toFixed(2)}${p.oldPrice ? `<span class="old-price">$${p.oldPrice.toFixed(2)}</span>` : ''}</div>
-                            <button class="btn btn-sm btn-accent" onclick="event.stopPropagation(); quickBuy(${p.id})" title="Order Now"><i class="fas fa-bolt"></i> Order Now</button>
+                            <button class="add-cart-btn" onclick="event.stopPropagation(); quickBuy(${p.id})" title="Order Now"><i class="fas fa-bolt"></i></button>
                         </div>
                     </div>
                 </div>`;
             }).join('') : `<div style="grid-column:1/-1;text-align:center;padding:60px 24px"><i class="fas fa-search" style="font-size:3rem;color:var(--border);margin-bottom:16px;display:block"></i><h3>No products found</h3><p style="color:var(--text-light);margin-top:8px">Try a different search or category</p></div>`}
         </div>
     </section>
+
+    <!-- Product Detail Modal (Daraz-style) -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content detail-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-box"></i> Product Details</h3>
+                <button class="modal-close" onclick="closeDetail()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+        </div>
+    </div>
+
     <!-- Quick Buy Checkout Modal -->
     <div class="modal-overlay" id="quickBuyModal">
         <div class="modal-content">
@@ -59,9 +71,9 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
             </div>
             <div class="modal-body">
                 <input type="hidden" id="qbProductId">
-                <div id="quickBuyPreview" style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px;text-align:center"></div>
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
-                    <h4 style="margin-bottom:12px;color:var(--primary-dark)"><i class="fas fa-user"></i> Your Details</h4>
+                <div id="quickBuyPreview" style="background:var(--bg);border-radius:var(--radius-sm);padding:20px;margin-bottom:20px;text-align:center;border:1px solid var(--border)"></div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+                    <h4 style="margin-bottom:16px;color:var(--primary-dark);font-size:1.1rem"><i class="fas fa-user"></i> Your Details</h4>
                     <div class="form-group"><label>Full Name *</label><input type="text" id="qbName" placeholder="Your full name" required style="width:100%"></div>
                     <div class="form-group"><label>Phone Number *</label><input type="tel" id="qbPhone" placeholder="+880 1XXXXXXXXXX" required style="width:100%"></div>
                     <div class="form-group"><label>Delivery Address *</label><textarea id="qbAddress" rows="3" placeholder="House, Road, Area, City, ZIP" required style="width:100%"></textarea></div>
@@ -73,7 +85,7 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-block" onclick="submitQuickOrder()" style="padding:16px;font-size:1.1rem"><i class="fas fa-check-circle"></i> Confirm Order</button>
+                <button class="btn btn-primary btn-block" onclick="submitQuickOrder()" style="padding:16px;font-size:1.1rem;border-radius:12px"><i class="fas fa-check-circle"></i> Confirm Order</button>
                 <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeQuickBuy()">Cancel</button>
             </div>
         </div>
@@ -88,21 +100,75 @@ function selectQuickPayment(el) {
     quickBuyPayment = el.querySelector('span').textContent;
 }
 
+function openProductDetail(id) {
+    const p = DB.getProduct(id);
+    if (!p) return;
+    const isUrl = p.image && (p.image.startsWith('http') || p.image.startsWith('data:'));
+    const cat = DB.categories.find(c => c.id === p.category);
+    const stars = '★'.repeat(Math.floor(p.rating)) + (p.rating % 1 >= 0.5 ? '½' : '');
+    document.getElementById('detailBody').innerHTML = `
+        <div class="detail-layout">
+            <div class="detail-image-section">
+                <div class="detail-image">${isUrl ? `<img src="${p.image}" alt="${p.name}">` : `<span style="font-size:6rem">${p.image}</span>`}</div>
+                ${p.oldPrice ? `<div class="detail-save-badge">Save $${(p.oldPrice - p.price).toFixed(2)}</div>` : ''}
+            </div>
+            <div class="detail-info-section">
+                <div class="detail-category">${cat ? cat.name : p.category}</div>
+                <h2 class="detail-title">${p.name}</h2>
+                <div class="detail-rating">
+                    <span class="stars">${stars}</span>
+                    <span class="reviews">${p.reviews} reviews</span>
+                </div>
+                <div class="detail-price-box">
+                    <div class="detail-current-price">$${p.price.toFixed(2)}</div>
+                    ${p.oldPrice ? `<div class="detail-old-price">$${p.oldPrice.toFixed(2)}</div>` : ''}
+                    ${p.oldPrice ? `<div class="detail-discount">${Math.round((1 - p.price/p.oldPrice) * 100)}% OFF</div>` : ''}
+                </div>
+                <div class="detail-divider"></div>
+                <div class="detail-section-title"><i class="fas fa-align-left"></i> Description</div>
+                <p class="detail-desc">${p.desc}</p>
+                <div class="detail-divider"></div>
+                <div class="detail-actions">
+                    <button class="btn btn-primary btn-block detail-order-btn" onclick="closeDetail(); quickBuy(${p.id})">
+                        <i class="fas fa-bolt"></i> Order Now — $${p.price.toFixed(2)}
+                    </button>
+                </div>
+                <div class="detail-safe">
+                    <i class="fas fa-shield-alt"></i> Safe & secure checkout. Your information is protected.
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('detailModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+    document.getElementById('detailModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
 function quickBuy(id) {
     const p = DB.getProduct(id);
     if (!p) return;
+    const isUrl = p.image && (p.image.startsWith('http') || p.image.startsWith('data:'));
     document.getElementById('qbProductId').value = id;
     document.getElementById('quickBuyPreview').innerHTML = `
-        <div style="font-size:3rem;margin-bottom:8px">${p.image}</div>
-        <h4 style="margin-bottom:4px">${p.name}</h4>
-        <p style="color:var(--text-light);font-size:.9rem">$${p.price.toFixed(2)}</p>
+        <div style="display:flex;align-items:center;gap:16px;text-align:left">
+            ${isUrl ? `<img src="${p.image}" style="width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0">` : `<span style="font-size:3rem">${p.image}</span>`}
+            <div>
+                <div style="font-weight:600;font-size:1rem;color:var(--text)">${p.name}</div>
+                <div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-top:4px">$${p.price.toFixed(2)}</div>
+                <div style="font-size:.85rem;color:var(--text-light)">Qty: 1</div>
+            </div>
+        </div>
     `;
     document.getElementById('qbName').value = '';
     document.getElementById('qbPhone').value = '';
     document.getElementById('qbAddress').value = '';
     document.getElementById('quickBuyModal').classList.add('open');
     document.body.style.overflow = 'hidden';
-    document.getElementById('qbName').focus();
+    setTimeout(() => document.getElementById('qbName').focus(), 300);
 }
 
 function closeQuickBuy() {
