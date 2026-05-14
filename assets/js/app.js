@@ -40,6 +40,9 @@ function render() {
         case '/admin':
             html = renderAdmin();
             break;
+        case '/supplier':
+            html = renderSupplier();
+            break;
         default:
             html = `<div style="text-align:center;padding:80px 24px"><h2>404 - Page Not Found</h2><p style="color:var(--text-light);margin:16px 0"><a href="#/" class="btn btn-primary">Go Home</a></div>`;
     }

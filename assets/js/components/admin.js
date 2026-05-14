@@ -324,12 +324,13 @@ function addSupplier() {
     const note = document.getElementById('dsNote').value.trim();
     if (!name || !phone) { Toast.show('Name and phone are required', 'error'); return; }
     const suppliers = DB.getSuppliers();
-    suppliers.push({ id: 'sup_' + Date.now().toString(36), name, phone, note });
+    const pin = Math.floor(1000 + Math.random() * 9000).toString();
+    suppliers.push({ id: 'sup_' + Date.now().toString(36), name, phone, note, pin });
     DB.saveSuppliers(suppliers);
     document.getElementById('dsName').value = '';
     document.getElementById('dsPhone').value = '';
     document.getElementById('dsNote').value = '';
-    Toast.show('Supplier added!');
+    Toast.show('Supplier added! PIN: ' + pin);
     render();
 }
 function deleteSupplier(id) {
