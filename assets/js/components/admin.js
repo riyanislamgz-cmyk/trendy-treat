@@ -40,7 +40,7 @@ function renderAdminDashboard(stats) {
                 ${DB.getOrders().slice(0, 10).map(o => `
                     <tr>
                         <td><strong>${o.id}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${new Date(o.date).toLocaleDateString()}</span></td>
-                        <td>${o.customer.fName} ${o.customer.lName}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.email}</span></td>
+                        <td>${o.customer.name}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.phone}</span></td>
                         <td>${o.items.reduce((s, i) => s + i.qty, 0)} items</td>
                         <td>$${o.total.toFixed(2)}</td>
                         <td><span class="order-status status-${o.status}">${o.status}</span></td>
