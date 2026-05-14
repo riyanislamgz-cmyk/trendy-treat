@@ -32,7 +32,7 @@ DB.getOrders = () => Store.get('orders', []);
 DB.saveOrders = (o) => Store.set('orders', o);
 DB.getInventory = () => Store.get('inventory', {});
 DB.saveInventory = (i) => Store.set('inventory', i);
-DB.getSettings = () => Store.get('settings', { geminiKey: '', storeName: 'Trendy Treat', currency: 'USD' });
+DB.getSettings = () => Store.get('settings', { geminiKey: 'AIzaSyBLWPd5Sx6ID4KtO1UKLtXlAhD-8awo-QU', storeName: 'Trendy Treat', currency: 'USD' });
 DB.saveSettings = (s) => Store.set('settings', s);
 DB.cartCount = () => DB.getCart().reduce((sum, i) => sum + i.qty, 0);
 DB.cartTotal = () => DB.getCart().reduce((sum, i) => sum + i.qty * i.price, 0);
