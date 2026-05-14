@@ -43,10 +43,7 @@ function renderProducts(category = 'all', search = '', sort = 'popular') {
                         <div class="prod-rating">${'★'.repeat(Math.floor(p.rating))}${p.rating % 1 >= 0.5 ? '½' : ''} <span>(${p.reviews})</span></div>
                         <div class="prod-price-row">
                             <div class="prod-price">$${p.price.toFixed(2)}${p.oldPrice ? `<span class="old-price">$${p.oldPrice.toFixed(2)}</span>` : ''}</div>
-                            <div style="display:flex;gap:6px">
-                                <button class="add-cart-btn" onclick="event.stopPropagation(); quickBuy(${p.id})" title="Buy Now"><i class="fas fa-bolt"></i></button>
-                                <button class="add-cart-btn" style="background:var(--accent)" onclick="event.stopPropagation(); addToCart(${p.id})" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
-                            </div>
+                            <button class="btn btn-sm btn-accent" onclick="event.stopPropagation(); quickBuy(${p.id})" title="Order Now"><i class="fas fa-bolt"></i> Order Now</button>
                         </div>
                     </div>
                 </div>`;
@@ -121,11 +118,10 @@ function submitQuickOrder() {
     if (!name || !phone || !address) { Toast.show('Please fill in all required fields', 'error'); return; }
     if (phone.replace(/[\+\-\s]/g, '').length < 10) { Toast.show('Please enter a valid phone number', 'error'); return; }
     const p = DB.getProduct(id);
-    DB.addToCart(id);
+    if (!p) return;
     const customer = { name, email: '', phone, address, payment: quickBuyPayment };
-    const order = DB.createOrder(customer);
+    const order = DB.createQuickOrder(p, customer);
     closeQuickBuy();
-    updateCartCount();
     Toast.show('🎉 Order placed! ID: ' + order.id);
     navigate('/orders');
 }

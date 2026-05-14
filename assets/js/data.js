@@ -62,9 +62,29 @@ DB.createOrder = (data) => {
         notes: ''
     };
     o.unshift(order); DB.saveOrders(o); DB.clearCart();
-    // Update inventory
     const inv = DB.getInventory();
     order.items.forEach(item => { inv[item.id] = (inv[item.id] || 20) - item.qty });
+    DB.saveInventory(inv);
+    return order;
+};
+DB.createQuickOrder = (product, customer) => {
+    const o = DB.getOrders();
+    const items = [{ id: product.id, name: product.name, price: product.price, image: product.image, qty: 1 }];
+    const total = product.price + 5.99;
+    const order = {
+        id: 'TT' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
+        items: items,
+        subtotal: product.price,
+        shipping: 5.99,
+        total: total,
+        customer: customer,
+        status: 'pending',
+        date: new Date().toISOString(),
+        notes: ''
+    };
+    o.unshift(order); DB.saveOrders(o);
+    const inv = DB.getInventory();
+    inv[product.id] = (inv[product.id] || 20) - 1;
     DB.saveInventory(inv);
     return order;
 };
