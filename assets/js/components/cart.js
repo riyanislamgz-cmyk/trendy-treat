@@ -2,7 +2,7 @@ function renderCart() {
     const items = DB.getCart();
     if (!items.length) {
         return `
-        <section class="cart-section">
+        <section class="checkout-section">
             <h2><i class="fas fa-shopping-bag"></i> Your Cart</h2>
             <div class="cart-empty">
                 <i class="fas fa-shopping-bag"></i>
@@ -41,31 +41,84 @@ function renderCart() {
             <div class="cart-summary">
                 <h3>Order Summary</h3>
                 <div class="summary-row"><span>Subtotal</span><span>$${DB.cartTotal().toFixed(2)}</span></div>
-                <div class="summary-row"><span>Shipping</span><span>${DB.cartTotal() >= 50 ? 'FREE' : '$5.99'}</span></div>
+                <div class="summary-row"><span>Shipping</span><span>${DB.cartTotal() >= 50 ? '<span style="color:#2ecc71">FREE</span>' : '$5.99'}</span></div>
                 <div class="summary-row total"><span>Total</span><span>$${(DB.cartTotal() + (DB.cartTotal() >= 50 ? 0 : 5.99)).toFixed(2)}</span></div>
                 <p style="font-size:.8rem;color:var(--text-light);margin:8px 0 16px">Free shipping on orders over $50</p>
-                <a href="#/checkout" class="btn btn-primary btn-block"><i class="fas fa-lock"></i> Checkout</a>
+                <button class="btn btn-primary btn-block" onclick="openCheckout()"><i class="fas fa-check-circle"></i> Order Now</button>
                 <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="clearCart()"><i class="fas fa-trash"></i> Clear Cart</button>
             </div>
         </div>
-    </section>`;
+    </section>
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-credit-card"></i> Place Your Order</h3>
+                <button class="modal-close" onclick="closeCheckout()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="max-height:70vh;overflow-y:auto;padding:20px">
+                <div class="order-details-preview" style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px">
+                    <h4 style="margin-bottom:8px;font-size:.95rem">📦 Items (${items.length})</h4>
+                    ${items.map(i => `<div style="display:flex;justify-content:space-between;font-size:.85rem;padding:3px 0"><span>${i.name} × ${i.qty}</span><span style="font-weight:600">$${(i.qty * i.price).toFixed(2)}</span></div>`).join('')}
+                    <div style="display:flex;justify-content:space-between;font-size:.9rem;padding:6px 0;border-top:1px solid var(--border);margin-top:8px">
+                        <span>Shipping</span><span>${DB.cartTotal() >= 50 ? '<span style="color:#2ecc71">FREE</span>' : '$5.99'}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;color:var(--primary);padding-top:8px;border-top:2px solid var(--primary)">
+                        <span>Total</span><span>$${(DB.cartTotal() + (DB.cartTotal() >= 50 ? 0 : 5.99)).toFixed(2)}</span>
+                    </div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+                    <h4 style="margin-bottom:12px;color:var(--primary-dark)"><i class="fas fa-user"></i> Your Information</h4>
+                    <div class="form-group"><label>Full Name *</label><input type="text" id="mcName" placeholder="Your full name" required style="width:100%"></div>
+                    <div class="form-group"><label>Phone Number *</label><input type="tel" id="mcPhone" placeholder="+880 1XXXXXXXXXX" required style="width:100%"></div>
+                    <div class="form-group"><label>Delivery Address *</label><textarea id="mcAddress" rows="3" placeholder="House, Road, Area, City, ZIP" required style="width:100%"></textarea></div>
+                    <div class="form-group"><label>Payment Method</label>
+                        <div class="payment-methods">
+                            <div class="payment-method active" onclick="selectCheckoutPayment(this)"><i class="fas fa-mobile-alt"></i><span>bKash/Nagad</span></div>
+                            <div class="payment-method" onclick="selectCheckoutPayment(this)"><i class="fas fa-credit-card"></i><span>Card</span></div>
+                            <div class="payment-method" onclick="selectCheckoutPayment(this)"><i class="fas fa-money-bill-wave"></i><span>Cash</span></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="placeCheckoutOrder()" style="padding:16px;font-size:1.1rem"><i class="fas fa-check-circle"></i> Confirm Order</button>
+                <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeCheckout()">Cancel</button>
+            </div>
+        </div>
+    </div>`;
 }
-function updateQty(id, qty) {
-    DB.updateQty(id, qty);
+
+let checkoutPaymentMethod = 'bKash/Nagad';
+
+function selectCheckoutPayment(el) {
+    el.parentElement.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+    el.classList.add('active');
+    checkoutPaymentMethod = el.querySelector('span').textContent;
+}
+
+function openCheckout() {
+    const modal = document.getElementById('checkoutModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+
+function closeCheckout() {
+    const modal = document.getElementById('checkoutModal');
+    if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; }
+}
+
+function placeCheckoutOrder() {
+    const name = document.getElementById('mcName').value.trim();
+    const phone = document.getElementById('mcPhone').value.trim();
+    const address = document.getElementById('mcAddress').value.trim();
+    if (!name || !phone || !address) { Toast.show('Please fill in all required fields', 'error'); return; }
+    if (phone.replace(/[\+\-\s]/g, '').length < 10) { Toast.show('Please enter a valid phone number', 'error'); return; }
+    const customer = { name, email: '', phone, address, payment: checkoutPaymentMethod };
+    const order = DB.createOrder(customer);
     updateCartCount();
-    render();
+    closeCheckout();
+    Toast.show('Order placed successfully! 🎉 Order ID: ' + order.id);
+    navigate('/orders');
 }
-function removeItem(id) {
-    DB.removeFromCart(id);
-    updateCartCount();
-    render();
-    Toast.show('Item removed from cart');
-}
-function clearCart() {
-    if (confirm('Clear your entire cart?')) {
-        DB.clearCart();
-        updateCartCount();
-        render();
-        Toast.show('Cart cleared');
-    }
-}
+
+function updateQty(id, qty) { DB.updateQty(id, qty); updateCartCount(); render(); }
+function removeItem(id) { DB.removeFromCart(id); updateCartCount(); render(); Toast.show('Item removed'); }
+function clearCart() { if (confirm('Clear your entire cart?')) { DB.clearCart(); updateCartCount(); render(); Toast.show('Cart cleared'); } }

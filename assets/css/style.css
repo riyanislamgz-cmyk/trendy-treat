@@ -242,6 +242,16 @@ main{flex:1;padding-top:80px;min-height:calc(100vh - 80px)}
 
 /* TOAST */
 .toast-container{position:fixed;top:88px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:9999;justify-content:center;align-items:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-content{background:#fff;border-radius:var(--radius);width:100%;max-width:560px;max-height:90vh;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.2);animation:modalIn .3s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border);background:var(--bg)}
+.modal-header h3{margin:0;font-size:1.2rem;color:var(--primary-dark)}
+.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-light);padding:4px 8px;transition:var(--transition)}
+.modal-close:hover{color:#e74c3c;background:rgba(231,76,60,.1);border-radius:50%}
+.modal-body{padding:24px}
 .toast{padding:14px 20px;border-radius:var(--radius-sm);color:#fff;font-size:.9rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.12);animation:slideInRight .3s ease;display:flex;align-items:center;gap:10px;min-width:280px}
 .toast.success{background:#2ecc71}
 .toast.error{background:#e74c3c}
