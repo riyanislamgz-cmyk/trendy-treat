@@ -64,7 +64,7 @@ function renderAdminOrders(orders) {
                 ${orders.map(o => `
                     <tr class="admin-order-row">
                         <td><strong>${o.id}</strong></td>
-                        <td>${o.customer.fName} ${o.customer.lName}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.email}<br>${o.customer.phone}</span></td>
+                        <td>${o.customer.name}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.phone}</span></td>
                         <td>${o.items.map(i => `${i.name} x ${i.qty}`).join('<br>')}</td>
                         <td><strong>$${o.total.toFixed(2)}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.payment}</span></td>
                         <td style="font-size:.85rem">${new Date(o.date).toLocaleDateString()}</td>
@@ -161,7 +161,7 @@ function updateOrderStatus(id, status) {
 function showOrderDetails(id) {
     const o = DB.getOrders().find(o => o.id === id);
     if (!o) return;
-    const msg = 'Order: ' + o.id + '\nCustomer: ' + o.customer.fName + ' ' + o.customer.lName + '\nEmail: ' + o.customer.email + '\nPhone: ' + o.customer.phone + '\nAddress: ' + o.customer.address + '\nPayment: ' + o.customer.payment + '\nItems: ' + o.items.map(i => i.name + ' x ' + i.qty + ' = $' + (i.qty * i.price).toFixed(2)).join('\n') + '\nTotal: $' + o.total.toFixed(2) + '\nStatus: ' + o.status + '\nDate: ' + new Date(o.date).toLocaleString();
+    const msg = 'Order: ' + o.id + '\nCustomer: ' + o.customer.name + '\nPhone: ' + o.customer.phone + '\nAddress: ' + o.customer.address + '\nPayment: ' + o.customer.payment + o.items.map(i => '\n  ' + i.name + ' x ' + i.qty + ' = $' + (i.qty * i.price).toFixed(2)).join('') + '\nTotal: $' + o.total.toFixed(2) + '\nStatus: ' + o.status + '\nDate: ' + new Date(o.date).toLocaleString();
     alert(msg);
 }
 function deleteOrder(id) {

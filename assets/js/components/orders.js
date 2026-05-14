@@ -40,6 +40,9 @@ function renderOrders() {
                     <div class="order-total">Total: $${o.total.toFixed(2)}</div>
                     ${o.notes ? `<div style="font-size:.85rem;color:var(--text-light);margin-top:8px;padding:8px;background:#f8faf8;border-radius:8px"><strong>Notes:</strong> ${o.notes}</div>` : ''}
                     <div style="margin-top:12px;font-size:.85rem;color:var(--text-light)">
+                        <i class="fas fa-user"></i> ${o.customer.name} &nbsp;|&nbsp; <i class="fas fa-phone"></i> ${o.customer.phone}
+                    </div>
+                    <div style="margin-top:4px;font-size:.85rem;color:var(--text-light)">
                         <i class="fas fa-map-marker-alt"></i> ${o.customer.address}
                     </div>
                 </div>
