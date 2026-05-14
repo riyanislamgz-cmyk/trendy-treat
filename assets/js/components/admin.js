@@ -16,11 +16,13 @@ function renderAdmin() {
             <button class="admin-tab ${adminTab === 'orders' ? 'active' : ''}" onclick="adminTab='orders';render()"><i class="fas fa-clipboard-list"></i> Orders (${stats.pending})</button>
             <button class="admin-tab ${adminTab === 'products' ? 'active' : ''}" onclick="adminTab='products';render()"><i class="fas fa-box"></i> Products</button>
             <button class="admin-tab ${adminTab === 'settings' ? 'active' : ''}" onclick="adminTab='settings';render()"><i class="fas fa-cog"></i> Settings</button>
+            <button class="admin-tab ${adminTab === 'dropship' ? 'active' : ''}" onclick="adminTab='dropship';render()"><i class="fas fa-truck"></i> Dropship</button>
         </div>
         ${adminTab === 'dashboard' ? renderAdminDashboard(stats) : ''}
         ${adminTab === 'orders' ? renderAdminOrders(orders) : ''}
         ${adminTab === 'products' ? renderAdminProducts(inv) : ''}
         ${adminTab === 'settings' ? renderAdminSettings(settings) : ''}
+        ${adminTab === 'dropship' ? renderDropship() : ''}
     </section>`;
 }
 function renderAdminDashboard(stats) {
@@ -106,6 +108,9 @@ function renderAdminProducts(inv) {
             </div>
             <div class="form-group"><label>Badge</label><select id="apBadge"><option value="">None</option><option value="new">New</option><option value="sale">Sale</option><option value="popular">Popular</option></select></div>
         </div>
+        <div class="form-group"><label>Supplier (for dropshipping)</label>
+            <select id="apSupplier"><option value="">None (own stock)</option>${DB.getSuppliers().map(s => `<option value="${s.id}">${s.name} - ${s.phone}</option>`).join('')}</select>
+        </div>
         <div id="imagePreview" style="margin-bottom:12px;display:none"><img id="previewImg" src="" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:2px solid var(--border)"></div>
         <div style="display:flex;gap:8px">
             <button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> <span id="saveBtnText">Add Product</span></button>
@@ -179,16 +184,17 @@ function saveProduct() {
     const desc = document.getElementById('apDesc').value.trim();
     const image = document.getElementById('apImage').value.trim() || '🎁';
     const badge = document.getElementById('apBadge').value || null;
+    const supplier = document.getElementById('apSupplier').value || '';
     if (!name || !price || isNaN(price)) { Toast.show('Name and valid price are required', 'error'); return; }
     if (price <= 0) { Toast.show('Price must be greater than 0', 'error'); return; }
     if (editingProductId) {
         const p = DB.getProduct(editingProductId);
-        if (p) { Object.assign(p, { name, category: cat, price, oldPrice, desc, image, badge }); }
+        if (p) { Object.assign(p, { name, category: cat, price, oldPrice, desc, image, badge, supplier }); }
         editingProductId = null;
         Toast.show('Product updated!');
     } else {
         const maxId = Math.max(...DB.products.map(p => p.id), 0);
-        DB.products.push({ id: maxId + 1, name, category: cat, price, oldPrice, rating: 0, reviews: 0, image, badge, desc });
+        DB.products.push({ id: maxId + 1, name, category: cat, price, oldPrice, rating: 0, reviews: 0, image, badge, desc, supplier });
         Toast.show('Product added!');
     }
     cancelEdit();
@@ -207,6 +213,7 @@ function editProduct(id) {
     document.getElementById('apDesc').value = p.desc;
     document.getElementById('apImage').value = p.image;
     document.getElementById('apBadge').value = p.badge || '';
+    document.getElementById('apSupplier').value = p.supplier || '';
     document.getElementById('cancelBtn').style.display = '';
     showImagePreview(p.image);
     document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
@@ -222,6 +229,7 @@ function cancelEdit() {
     document.getElementById('apDesc').value = '';
     document.getElementById('apImage').value = '';
     document.getElementById('apBadge').value = '';
+    document.getElementById('apSupplier').value = '';
     document.getElementById('imagePreview').style.display = 'none';
 }
 function showImagePreview(url) {
@@ -246,5 +254,133 @@ function saveAdminSettings() {
     DB.saveSettings(settings);
     Gemini.init();
     Toast.show('Settings saved!');
+    render();
+}
+function renderDropship() {
+    const suppliers = DB.getSuppliers();
+    const orders = DB.getOrders();
+    return `
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px">
+        <div class="add-product-form" style="flex:1;min-width:300px">
+            <h3><i class="fas fa-user-plus"></i> Add Supplier</h3>
+            <div class="form-group"><label>Name *</label><input type="text" id="dsName" placeholder="Supplier name"></div>
+            <div class="form-group"><label>Phone *</label><input type="tel" id="dsPhone" placeholder="+880 1XXXXXXXXXX"></div>
+            <div class="form-group"><label>Note</label><textarea id="dsNote" rows="2" placeholder="Delivery area, products they supply, etc."></textarea></div>
+            <button class="btn btn-primary" onclick="addSupplier()"><i class="fas fa-save"></i> Save Supplier</button>
+        </div>
+        <div class="add-product-form" style="flex:1;min-width:300px">
+            <h3><i class="fas fa-info-circle"></i> How Dropshipping Works</h3>
+            <div style="font-size:.9rem;line-height:1.8;color:var(--text-light)">
+                <p>1️⃣ Add suppliers above with their phone numbers</p>
+                <p>2️⃣ Edit each product → assign a supplier</p>
+                <p>3️⃣ When order comes, click <strong>Forward</strong> to send details to supplier via WhatsApp</p>
+                <p>4️⃣ Supplier delivers directly to your customer</p>
+            </div>
+        </div>
+    </div>
+    ${suppliers.length ? `
+    <div class="admin-table-wrap" style="margin-bottom:20px">
+        <table class="admin-table">
+            <thead><tr><th>Name</th><th>Phone</th><th>Note</th><th>Actions</th></tr></thead>
+            <tbody>${suppliers.map(s => `
+                <tr>
+                    <td><strong>${s.name}</strong></td>
+                    <td><a href="https://wa.me/${s.phone.replace(/[^0-9]/g,'')}" target="_blank">${s.phone}</a></td>
+                    <td style="font-size:.85rem;color:var(--text-light)">${s.note || ''}</td>
+                    <td><button class="del-btn" onclick="deleteSupplier('${s.id}')"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('')}</tbody>
+        </table>
+    </div>` : '<p style="text-align:center;padding:40px;color:var(--text-light)">No suppliers yet. Add your dropshipping suppliers above.</p>'}
+    <h3 style="margin-bottom:16px"><i class="fas fa-clipboard-list"></i> Orders to Forward</h3>
+    ${orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length ? `
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Supplier</th><th>Action</th></tr></thead>
+            <tbody>${orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').map(o => {
+                const hasSupplier = o.items.some(i => {
+                    const p = DB.getProduct(i.id);
+                    return p && p.supplier;
+                });
+                return `<tr>
+                    <td><strong>${o.id}</strong><br><span style="font-size:.8rem;color:var(--text-light)">${new Date(o.date).toLocaleDateString()}</span></td>
+                    <td>${o.customer.name}<br><span style="font-size:.8rem;color:var(--text-light)">${o.customer.phone}</span></td>
+                    <td>${o.items.map(i => {
+                        const p = DB.getProduct(i.id);
+                        const sup = p && p.supplier ? suppliers.find(s => s.id === p.supplier) : null;
+                        return `<div>${i.name} x ${i.qty}${sup ? '<br><span style="font-size:.75rem;color:var(--primary)">→ ' + sup.name + '</span>' : ''}</div>`;
+                    }).join('')}</td>
+                    <td>${hasSupplier ? '<span style="color:#2ecc71">Ready</span>' : '<span style="color:var(--text-light)">No supplier</span>'}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="forwardOrder('${o.id}')" ${hasSupplier ? '' : 'disabled'}><i class="fab fa-whatsapp"></i> Forward</button></td>
+                </tr>`;
+            }).join('')}</tbody>
+        </table>
+    </div>` : '<p style="text-align:center;padding:40px;color:var(--text-light)">No pending orders to forward</p>'}
+    `;
+}
+function addSupplier() {
+    const name = document.getElementById('dsName').value.trim();
+    const phone = document.getElementById('dsPhone').value.trim();
+    const note = document.getElementById('dsNote').value.trim();
+    if (!name || !phone) { Toast.show('Name and phone are required', 'error'); return; }
+    const suppliers = DB.getSuppliers();
+    suppliers.push({ id: 'sup_' + Date.now().toString(36), name, phone, note });
+    DB.saveSuppliers(suppliers);
+    document.getElementById('dsName').value = '';
+    document.getElementById('dsPhone').value = '';
+    document.getElementById('dsNote').value = '';
+    Toast.show('Supplier added!');
+    render();
+}
+function deleteSupplier(id) {
+    if (confirm('Delete this supplier?')) {
+        DB.saveSuppliers(DB.getSuppliers().filter(s => s.id !== id));
+        Toast.show('Supplier deleted');
+        render();
+    }
+}
+function forwardOrder(orderId) {
+    const o = DB.getOrders().find(o => o.id === orderId);
+    if (!o) return;
+    const suppliers = DB.getSuppliers();
+    const msg = [];
+    msg.push('🛒 *NEW ORDER*');
+    msg.push('Order: ' + o.id);
+    msg.push('Date: ' + new Date(o.date).toLocaleString());
+    msg.push('');
+    msg.push('*Customer:*');
+    msg.push('Name: ' + o.customer.name);
+    msg.push('Phone: ' + o.customer.phone);
+    msg.push('Address: ' + o.customer.address);
+    msg.push('Payment: ' + o.customer.payment);
+    msg.push('');
+    msg.push('*Items:*');
+    o.items.forEach(i => {
+        const p = DB.getProduct(i.id);
+        const sup = p && p.supplier ? suppliers.find(s => s.id === p.supplier) : null;
+        msg.push('• ' + i.name + ' x ' + i.qty + ' = ' + DB.formatPrice(i.qty * i.price));
+        if (sup) msg.push('  Supplier: ' + sup.name + ' (' + sup.phone + ')');
+    });
+    msg.push('');
+    msg.push('Total: ' + DB.formatPrice(o.total));
+    msg.push('Delivery: ' + (o.customer.address.split(',').pop() || 'Bangladesh'));
+    const encoded = encodeURIComponent(msg.join('\n'));
+    const uniqueSuppliers = [...new Set(o.items.map(i => {
+        const p = DB.getProduct(i.id);
+        return p && p.supplier ? p.supplier : null;
+    }).filter(Boolean))];
+    if (uniqueSuppliers.length === 1) {
+        const sup = suppliers.find(s => s.id === uniqueSuppliers[0]);
+        if (sup) {
+            window.open('https://wa.me/' + sup.phone.replace(/[^0-9]/g,'') + '?text=' + encoded, '_blank');
+            DB.updateOrderStatus(o.id, 'forwarded', 'Forwarded to ' + sup.name);
+            Toast.show('Forwarded to ' + sup.name);
+            render();
+            return;
+        }
+    }
+    window.open('https://wa.me/?text=' + encoded, '_blank');
+    DB.updateOrderStatus(o.id, 'forwarded', 'Forwarded to supplier');
+    Toast.show('Order info copied. Send to your supplier on WhatsApp.');
     render();
 }
